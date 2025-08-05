@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Model Serving API - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-brain text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold">ML Model Serving API</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="status-indicator" class="flex items-center">
+                        <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                        <span>Online</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Dashboard Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Model Performance Dashboard</h2>
+            <p class="mt-2 text-gray-600">Monitor your ML models, test predictions, and analyze performance metrics</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-server text-blue-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Models</dt>
+                                <dd class="text-lg font-medium text-gray-900" id="active-models-count">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-line text-green-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Predictions</dt>
+                                <dd class="text-lg font-medium text-gray-900" id="total-predictions">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-clock text-yellow-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Avg Response Time</dt>
+                                <dd class="text-lg font-medium text-gray-900" id="avg-response-time">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-percentage text-purple-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Success Rate</dt>
+                                <dd class="text-lg font-medium text-gray-900" id="success-rate">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Model Testing Panel -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-flask mr-2"></i>Model Testing
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <form id="prediction-form">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Model Version</label>
+                            <select id="model-select" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Auto (A/B Testing)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Input Features</label>
+                            <div class="grid grid-cols-2 gap-2" id="features-grid">
+                                <!-- Feature inputs will be generated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="ab-testing-enabled" checked class="mr-2">
+                                <span class="text-sm text-gray-700">Enable A/B Testing</span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-play mr-2"></i>Make Prediction
+                        </button>
+                    </form>
+                    
+                    <!-- Prediction Result -->
+                    <div id="prediction-result" class="mt-6 hidden">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 mb-2">Prediction Result</h4>
+                            <div class="space-y-2 text-sm">
+                                <div><strong>Prediction:</strong> <span id="result-prediction">-</span></div>
+                                <div><strong>Model Version:</strong> <span id="result-model">-</span></div>
+                                <div><strong>Confidence:</strong> <span id="result-confidence">-</span></div>
+                                <div><strong>Processing Time:</strong> <span id="result-time">-</span></div>
+                                <div><strong>Request ID:</strong> <span id="result-id">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Management Panel -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-cogs mr-2"></i>Model Management
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div id="models-list">
+                        <!-- Models will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Charts -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Prediction Trends Chart -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-chart-area mr-2"></i>Prediction Trends (24h)
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <canvas id="trends-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- A/B Testing Status -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-balance-scale mr-2"></i>A/B Testing Status
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div id="ab-testing-status">
+                        <!-- A/B testing info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Metrics -->
+        <div class="mt-8">
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-server mr-2"></i>System Metrics
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="cpu-usage">-</div>
+                            <div class="text-sm text-gray-500">CPU Usage</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="memory-usage">-</div>
+                            <div class="text-sm text-gray-500">Memory Usage</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="disk-usage">-</div>
+                            <div class="text-sm text-gray-500">Disk Usage</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+            <span>Processing...</span>
+        </div>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
